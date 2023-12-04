@@ -430,6 +430,7 @@ Address под нагрузкой от запросов к тайлам + зап
 ***Индексы***
 
 Индексируем Points:
+
     CREATE INDEX point_address_index ON Point (address);
     CREATE INDEX geom_idx ON Point USING GIST (coordinates);  // spatial index
 
