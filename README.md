@@ -610,7 +610,7 @@ Address под нагрузкой от запросов к тайлам + зап
 
 ## 9. Схема проекта
 
-![Alt text](image-15.png)
+![Alt text](image-20.png)
 
 ### Search APP отдельно
 
