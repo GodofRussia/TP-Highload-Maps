@@ -687,7 +687,7 @@ Address под нагрузкой от запросов к тайлам + зап
 | Cassandra | 640 000 RPS | 128 | 256 ГБ  | 167 ГБ|
 | Hadoop | 35 000 RPS | 2 | 2 ГБ | 180 ГБ |
 | Tarantool | 10 310 RPS | 320 | 392ГБ | - |
-| CEPH | 590 000 RPS | 2 | 2 ГБ  | 157 Тб |
+| CEPH | 590 000 RPS | 3000 | 314 ГБ  | 157 Тб |
 
 ### Конфигурация по оборудованию с амортизированной стоимостью
 
@@ -703,7 +703,7 @@ Address под нагрузкой от запросов к тайлам + зап
 | Elasticsearch | own  | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 9 | €      405  |
 | PostgreSQL | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   |    10 | €      3 000  |
 | Tarantool | own | CyberServe EPYC EP1-108S / AMD EPYC 7452 - 32 Core /  RAM 1x128GB / SSD 1x480GB |  32   | 10 | € 840  |
-| CEPH | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
+| CEPH | own | CyberServe Xeon SP1-P408T G4 / Intel Xeon Platinum 8452Y Processor 36 Cores /  RAM 1x64GB / NVMe 30.72TB |  32   | 94 | €  16 611  |
 | Hadoop + Spark | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
 | Cassandra | own | CyberServe EPYC EP1-108S / AMD EPYC 7313P - 16 Cores /  RAM 1x32GB / Micron 7450 PRO 480GB NVMe | 16 | 26 | €  1 166 |
 | Neo4j | own | CyberServe EPYC EP1-108S / AMD EPYC 7282 - 16 Core /  RAM 1x32GB / HDD 72x2.4TB | 16 | 2 | € 87 |
@@ -742,3 +742,4 @@ Address под нагрузкой от запросов к тайлам + зап
 [^32]: (https://habr.com/ru/companies/ruvds/articles/507570/)
 [^33]: (https://www.nginx.com/blog/nginx-websockets-performance/)
 [^34]: (https://github.com/lsst-uk/lasair-project-management/issues/142)
+[^35]: (https://bigdata-intips.blogspot.com/2015/10/hadoopwith-spark.html)
