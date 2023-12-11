@@ -679,13 +679,15 @@ Address под нагрузкой от запросов к тайлам + зап
 
     Cassandra: по рекомендациям на 20 Гб кластер рекомендуется 32GB memory and 16CPUs[^34]
 
+    Hadoop и Spark - DataNode и TaskTracker ноды рекомендуется выбирать по такому конфигу[^35].
+
 | СУБД | Целевая пиковая нагрузка </br> на базу | CPU | RAM | Memory
 | -- | -- | ----- | ------- | -------- |
 | Neo4j | 3 704 RPS | 16 | 32 ГБ  | 0.41 ГБ |
-| PostgreSQL | 31 790 RPS | 2 | 2 ГБ  | 17 ГБ |
+| PostgreSQL | 31 790 RPS | 600 | 640 ГБ  | 17 ГБ |
 | ElasticSearch | 926 RPS | 180 | 180 ГБ  | 17 Гб |
 | Cassandra | 640 000 RPS | 128 | 256 ГБ  | 167 ГБ|
-| Hadoop | 35 000 RPS | 2 | 2 ГБ | 180 ГБ |
+| Hadoop | 35 000 RPS | 7000 | 7000 ГБ | 180 ГБ |
 | Tarantool | 10 310 RPS | 320 | 392ГБ | - |
 | CEPH | 590 000 RPS | 3000 | 314 ГБ  | 157 Тб |
 
@@ -701,10 +703,10 @@ Address под нагрузкой от запросов к тайлам + зап
 | PathFinder (роутинг маршрута)  | own   | CyberServe EPYC EP1-102 / AMD EPYC 7232P - 8 Cores /  1x64GB |  8   |  2   | €  66 |
 | Балансировщики | own | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 16 Cores /  1x8GB |  16   | 8  | € 260 |
 | Elasticsearch | own  | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 9 | €      405  |
-| PostgreSQL | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   |    10 | €      3 000  |
+| PostgreSQL | own | CyberServe Xeon SP1-P408T G4 / ntel Xeon Gold 6430 Processor 32 Cores /  RAM 16GB / NVMe 960GB |  32  | 58 | € 5 238  |
 | Tarantool | own | CyberServe EPYC EP1-108S / AMD EPYC 7452 - 32 Core /  RAM 1x128GB / SSD 1x480GB |  32   | 10 | € 840  |
 | CEPH | own | CyberServe Xeon SP1-P408T G4 / Intel Xeon Platinum 8452Y Processor 36 Cores /  RAM 1x64GB / NVMe 30.72TB |  32   | 94 | €  16 611  |
-| Hadoop + Spark | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
+| Hadoop + Spark | own | CyberServe Xeon SP1-P408T G4 / Intel Xeon Gold 6430 Processor 32 Cores /  RAM 64GB / HDD 2TB / NVMe 1.6TB |  32   | 219 | €  21 921  |
 | Cassandra | own | CyberServe EPYC EP1-108S / AMD EPYC 7313P - 16 Cores /  RAM 1x32GB / Micron 7450 PRO 480GB NVMe | 16 | 26 | €  1 166 |
 | Neo4j | own | CyberServe EPYC EP1-108S / AMD EPYC 7282 - 16 Core /  RAM 1x32GB / HDD 72x2.4TB | 16 | 2 | € 87 |
 
