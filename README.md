@@ -471,7 +471,7 @@ Address под нагрузкой от запросов к тайлам + зап
 
 ***Индексы***
 
-Бекенд питона создаёт индекс для анализатора по токенам и поиска конкретного адреса или адресов по тегу.
+    Бекенд питона создаёт индекс для анализатора по токенам и поиска конкретного адреса или адресов по тегу.
 
 ***Шардинг***
 
@@ -544,12 +544,13 @@ Address под нагрузкой от запросов к тайлам + зап
 |-|-|-|-|-|-|-|
 | Hadoop | Tracking | СУБД для агрегации трекеров в информацию о сегментах дорожного графа | за 5 минут из Kafka</br> приходит 10 500 000 событий весом 0.63 Гб | 35 000 | 180 Гб | Используя вместе со Spark мы используем шардированные ноды HDFS и внешний код для агрегации |
 | ElasticSearch | SearchIndex | Индексы на поиск | 926 RPS | 0 | 17Гб | Шардирование из коробки, также создаём 7 клиентов-воркеров для низких задержек на запросы |
-| Kafka | Tracking | Принимает внешние трекеры с утройств пользователей | Раз в 5 минут | 35 000 | 0.63 Гб |  Заводим нужное количество тредов на нагрузку, делаем партиции |
+| Kafka | Tracking | Принимает внешние трекеры с утройств пользователей | Раз в 5 минут | 35 000 | 0.63 Гб |  Заводим нужное количество тредов на нагрузку, делаем на партиции (брокеры) |
 | Tarantool |  Session и Tiles | Кешируем данные, получаем готовые ответы со всей информацией | 10 310 RPS | 60 | 2ГБ индексы </br> 390ГБ данные | VShard[^27] для шардирования по бакетам, а также создадим реплик для выдержки RPS |
-| Cassandra |  ExternalSegment и RoadEvent | Высокая нагрузка на запись данных в купе с масштабируемостью | 14 815 RPS | 622 627 | 167.4Гб данные | Необходимо сконфигурировать фактор репликации (RF) и количество нод (шардов N), чтобы выдержать нагрузку записи |
+| Cassandra |  ExternalSegment и RoadEvent | Высокая нагрузка на запись данных в купе с масштабируемостью | 14 815 RPS | 622 627 | 167.4Гб данные | Необходимо сконфигурировать фактор репликации (RF) и количество нод (шардов N), чтобы выдержать нагрузку записи. В СУБД есть свой механизм хеширования для определение кластера. |
 | CEPH | Tiles (png) и аватарки | S3 хранилище для тяжелых данных | 21 388 RPS | 572 650 | 157 Тб | CEPH можно скалироваться до миллиардов объектов в сумме по множеству бакетов[^28] |
 | Neo4j | RoadSegmentNode | Храним граф дорог | 3 704 RPS | 1 | 0.41Гб данные |  |
 | PostgreSQL | Tile, Point, Address, UserData | Используем для сбора основных данных системы | 31 790 RPS | 33.6 | 1ГБ индексы </br> 16Гб данные | Создаём реплики для эффективности чтения и отказоустойчивости |
+|Индексы | отдельно выделены выше | |
 
 ![Alt text](image-19.png)
 
@@ -665,32 +666,47 @@ Address под нагрузкой от запросов к тайлам + зап
 
 | Сервис | Целевая пиковая нагрузка </br> приложения | CPU | RAM | Net
 | -- | -- | ----- | ------- | -------- |
-| Tiles | 10 277 RPS | 20 | 206 ГБ   | 30 Гбит/сек  |
-| Search | 926 RPS | 100   | 20 ГБ   | 722 Мбит/сек |
+| Tiles | 10 277 RPS | 200 | 206 ГБ   | 30 Гбит/сек  |
+| Search | 926 RPS | 100 | 20 ГБ   | 722 Мбит/сек |
 | PathFinder (построение маршрута) | 1 852 RPS | 330 | 30 ГБ | 58 Гбит/сек |
 | PathFinder (роутинг маршрута) | 2 222 соединения по вебсокету[^33] | 5 | 45 ГБ | 11.2 Мбит/сек |
-| RoadEvents | 11 111 RPS | 22 | 222 ГБ | 53 Гбит/сек  |
-| Auth | 100 RPS | 2   | 2 ГБ   | 2 Гбит/c   |
-| User | 100 RPS | 2  | 2 ГБ  | 3.5 Гбит/с   |
+| RoadEvents | 11 111 RPS | 220 | 222 ГБ | 53 Гбит/сек  |
+| Auth | 100 RPS | 2 | 2 ГБ   | 2 Гбит/c   |
+| User | 100 RPS | 2 | 2 ГБ  | 3.5 Гбит/с |
+| Балансеры (L7) | 60 277 RPS | 16 | 16 ГБ  | 72 Гбит/с |
+
+### Распределение ресурсов по СУБД
+
+    Cassandra: по рекомендациям на 20 Гб кластер рекомендуется 32GB memory and 16CPUs[^34]
+
+| СУБД | Целевая пиковая нагрузка </br> на базу | CPU | RAM | Memory
+| -- | -- | ----- | ------- | -------- |
+| Neo4j | 3 704 RPS | 16 | 32 ГБ  | 0.41 ГБ |
+| PostgreSQL | 31 790 RPS | 2 | 2 ГБ  | 17 ГБ |
+| ElasticSearch | 926 RPS | 180 | 180 ГБ  | 17 Гб |
+| Cassandra | 640 000 RPS | 128 | 256 ГБ  | 167 ГБ|
+| Hadoop | 35 000 RPS | 2 | 2 ГБ | 180 ГБ |
+| Tarantool | 10 310 RPS | 320 | 392ГБ | - |
+| CEPH | 590 000 RPS | 2 | 2 ГБ  | 157 Тб |
 
 ### Конфигурация по оборудованию с амортизированной стоимостью
 
 | Сервис | Хостинг |Конфигурация | Cores | Cnt | Цена |
 |--|--|--|--|--|--|
-| Tiles | own | CyberServe EPYC EP1-102 / AMD EPYC 7313P - 16 Cores /  1х128Гб | 20 | 2  | € 100 |
-| RoadEvents | own | CyberServe EPYC EP1-102 / AMD EPYC 7313P - 16 Cores /  1х128Гб | 22 | 2 | € 100 |
+| Tiles | own | CyberServe EPYC EP1-102 / AMD EPYC 7313P - 16 Cores /  1х128Гб | 16 | 13  | € 650 |
+| RoadEvents | own | CyberServe EPYC EP1-102 / AMD EPYC 7313P - 16 Cores /  1х128Гб | 16 | 14 | € 700 |
 | Auth + User | own | CyberServe Atom-100i  / A2SDI-4C-HLN4F- 4-Core /  1x4GB | 4 | 1   | € 13 |
-| Search | own  | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB | 100 | 32  | €  4 400 |
-| PathFinder (построение маршрута)  | own | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB |  330   |  7   | €  1 000 |
-| PathFinder (роутинг маршрута)  | own   | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB |  5   |  7   | €  1 000 |
-| Балансировщики | own | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB |  24   | 90  | € 12 318 |
-| Elasticsearch | own  | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   |     5 | €      1 500  |
+| Search | own  | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB | 32 | 4  | €  288 |
+| PathFinder (построение маршрута)  | own | CyberServe EPYC EP1-102 / AAMD EPYC 7543P - 32 Cores /  1x8GB |  32   |  11   | €  784 |
+| PathFinder (роутинг маршрута)  | own   | CyberServe EPYC EP1-102 / AMD EPYC 7232P - 8 Cores /  1x64GB |  8   |  2   | €  66 |
+| Балансировщики | own | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 16 Cores /  1x8GB |  16   | 8  | € 260 |
+| Elasticsearch | own  | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 9 | €      405  |
 | PostgreSQL | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   |    10 | €      3 000  |
-| Tarantool | own | CyberStore 212S 12GB/s Storage Server / Intel Xeon Silver 4310 Processor 12 Cores /  RAM 8x8GB / HDD 1x1TB       |  12   |     5 | €        500  |
+| Tarantool | own | CyberServe EPYC EP1-108S / AMD EPYC 7452 - 32 Core /  RAM 1x128GB / SSD 1x480GB |  32   | 10 | € 840  |
 | CEPH | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
 | Hadoop + Spark | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
-| Cassandra | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
-| Neo4j | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
+| Cassandra | own | CyberServe EPYC EP1-108S / AMD EPYC 7313P - 16 Cores /  RAM 1x32GB / Micron 7450 PRO 480GB NVMe | 16 | 26 | €  1 166 |
+| Neo4j | own | CyberServe EPYC EP1-108S / AMD EPYC 7282 - 16 Core /  RAM 1x32GB / HDD 72x2.4TB | 16 | 2 | € 87 |
 
 ## Список использованной литературы
 
@@ -725,3 +741,4 @@ Address под нагрузкой от запросов к тайлам + зап
 [^31]: (https://habr.com/ru/companies/performix/articles/218065/)
 [^32]: (https://habr.com/ru/companies/ruvds/articles/507570/)
 [^33]: (https://www.nginx.com/blog/nginx-websockets-performance/)
+[^34]: (https://github.com/lsst-uk/lasair-project-management/issues/142)
