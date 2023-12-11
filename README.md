@@ -640,6 +640,7 @@ Address под нагрузкой от запросов к тайлам + зап
 | Паттерн 'Тыква' | Больше относится к бекендам, суть - крайняя точка при отвале основного функционала системы => переключение на легковесную заглушку[^30] с частично реализованной логикой |
 | CQRS и 2PC | Реализуем логику двухфазового коммита для всех хранилищ с приоритетными операциями записи, а также разделяем взаимодейстие на потоки записи и чтения в такие хранилища |
 | Неработающие кеши | Все системы, использующие кеши, расчитаны на работу без кешей в штатном режиме |
+| Kubernetes | Оркестрация позволяет делать отслеживание рабочих бекендов по service discovery, а также переносить контейнеры между сервисами |
 
 ### Надежность ДЦ
 
@@ -654,7 +655,42 @@ Address под нагрузкой от запросов к тайлам + зап
 
 ## 11. Расчёт оборудования
 
+Бенчмарки на питоновские вер-сервера[^32]. Выходит на 8Гб ОЗУ приблизительно 4000 RPS на какую-то легкую вебсерверную логику, тогда на среднюю 400 RPS, а на сложную 40 RPS считаем:
 
+    Легкий код питон: 4000 RPS / 8 Гб = 500 RPS/Гб
+    Средний код питон: 400 RPS / 8 Гб = 50 RPS/Гб
+    Тяжелый код питон: 40 RPS / 8 Гб = 5 RPS/Гб
+
+### Распределение ресурсов по сервисам
+
+| Сервис | Целевая пиковая нагрузка </br> приложения | CPU | RAM | Net
+| -- | -- | ----- | ------- | -------- |
+| Tiles | 10 277 RPS | 20 | 206 ГБ   | 30 Гбит/сек  |
+| Search | 926 RPS | 100   | 20 ГБ   | 722 Мбит/сек |
+| PathFinder (построение маршрута) | 1 852 RPS | 330 | 30 ГБ | 58 Гбит/сек |
+| PathFinder (роутинг маршрута) | 2 222 соединения по вебсокету[^33] | 5 | 45 ГБ | 11.2 Мбит/сек |
+| RoadEvents | 11 111 RPS | 22 | 222 ГБ | 53 Гбит/сек  |
+| Auth | 100 RPS | 2   | 2 ГБ   | 2 Гбит/c   |
+| User | 100 RPS | 2  | 2 ГБ  | 3.5 Гбит/с   |
+
+### Конфигурация по оборудованию с амортизированной стоимостью
+
+| Сервис | Хостинг |Конфигурация | Cores | Cnt | Цена |
+|--|--|--|--|--|--|
+| Tiles | own | CyberServe EPYC EP1-102 / AMD EPYC 7313P - 16 Cores /  1х128Гб | 20 | 2  | € 100 |
+| RoadEvents | own | CyberServe EPYC EP1-102 / AMD EPYC 7313P - 16 Cores /  1х128Гб | 22 | 2 | € 100 |
+| Auth + User | own | CyberServe Atom-100i  / A2SDI-4C-HLN4F- 4-Core /  1x4GB | 4 | 1   | € 13 |
+| Search | own  | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB | 100 | 32  | €  4 400 |
+| PathFinder (построение маршрута)  | own | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB |  330   |  7   | €  1 000 |
+| PathFinder (роутинг маршрута)  | own   | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB |  5   |  7   | €  1 000 |
+| Балансировщики | own | CyberServe EPYC EP1-102 / AMD EPYC 7573X - 32 Cores /  1x8GB |  24   | 90  | € 12 318 |
+| Elasticsearch | own  | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   |     5 | €      1 500  |
+| PostgreSQL | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   |    10 | €      3 000  |
+| Tarantool | own | CyberStore 212S 12GB/s Storage Server / Intel Xeon Silver 4310 Processor 12 Cores /  RAM 8x8GB / HDD 1x1TB       |  12   |     5 | €        500  |
+| CEPH | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
+| Hadoop + Spark | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
+| Cassandra | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
+| Neo4j | own | CyberStore 472S 12GB/s Storage Server / Intel Xeon Silver 4316 Processor 20 Cores /  RAM 16x128GB / HDD 72x2.4TB |  20   | 5 926 | €  1 778 000  |
 
 ## Список использованной литературы
 
@@ -687,3 +723,5 @@ Address под нагрузкой от запросов к тайлам + зап
 [^29]: (https://its.1c.ru/db/metod8dev/content/5971/hdoc)
 [^30]: (https://academy.yandex.ru/knowledge/patterny-otkazoustojchivoj-arhitektury)
 [^31]: (https://habr.com/ru/companies/performix/articles/218065/)
+[^32]: (https://habr.com/ru/companies/ruvds/articles/507570/)
+[^33]: (https://www.nginx.com/blog/nginx-websockets-performance/)
